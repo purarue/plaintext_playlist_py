@@ -10,11 +10,11 @@ Also includes some `ID3`/music scripts:
 
 ## Installation
 
-Requires `python3.7+`
+Requires `python3.10+`
 
 To install with pip, run:
 
-    pip install plaintext_playlist_py
+    pip install git+https://github.com/seanbreckenridge/plaintext-playlist
 
 ## Usage
 

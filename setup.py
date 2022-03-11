@@ -18,7 +18,7 @@ def main() -> None:
         package_data={pkg: ["py.typed"]},
         zip_safe=False,
         keywords="music",
-        python_requires=">=3.9",
+        python_requires=">=3.10",
         entry_points={
             "console_scripts": [
                 "plaintext_playlist_py = plaintext_playlist_py.__main__:main"
@@ -35,7 +35,6 @@ def main() -> None:
             "License :: OSI Approved :: MIT License",
             "Programming Language :: Python",
             "Programming Language :: Python :: 3",
-            "Programming Language :: Python :: 3.9",
             "Programming Language :: Python :: 3.10",
         ],
     )
