@@ -10,7 +10,7 @@ https://github.com/karlicoss/HPI#which-month-in-2020-did-i-make-the-most-git-com
 import typing as t
 from pathlib import Path
 
-from . import Collection, musicdir, iterate_playlists
+from . import Collection, musicdir
 
 
 def collections() -> t.Iterator[Collection]:
@@ -18,4 +18,6 @@ def collections() -> t.Iterator[Collection]:
 
 
 def songs() -> t.Iterator[Path]:
+    from . import iterate_playlists
+
     yield from map(lambda p: p.in_musicdir(), iterate_playlists())
