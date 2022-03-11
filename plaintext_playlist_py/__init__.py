@@ -2,8 +2,7 @@ import os
 
 import subprocess
 from pathlib import Path
-from typing import Iterator
-from typing import NamedTuple
+from typing import Iterator, NamedTuple
 from functools import lru_cache
 
 import click
@@ -50,3 +49,41 @@ def iterate_playlists(playlist_txt_dir: Path | None = None) -> Iterator[Playlist
         except UnicodeDecodeError as e:
             click.echo(f"While decoding {playlistfile}", err=True)
             raise e
+
+
+class Collection(NamedTuple):
+    """
+    either an album, a disc of an album or a single
+    i.e. some flat collection of mp3 files
+    (shouldn't include album art -- that will be searched for later)
+    both should be absolute paths
+    """
+
+    root: Path
+    paths: list[Path]
+
+    @classmethod
+    def iter_ext_collection(
+        cls, rootdir: Path, ext: str = ".mp3"
+    ) -> Iterator["Collection"]:
+        """
+        Given some directory, return any collections under this
+        with a given extension. Defaults to .mp3
+        """
+        if not ext.startswith("."):
+            ext = f".{ext}"
+        # if not given a directory, return
+        if not rootdir.is_dir():
+            return
+        paths: list[Path] = []
+        for f in map(lambda p: p.absolute(), rootdir.iterdir()):
+            if f.is_dir():
+                yield from cls.iter_ext_collection(f, ext=ext)
+            elif f.suffix == ext:
+                paths.append(f.absolute())
+        if len(paths) > 0:
+            # sanity check to make sure these are all in the same directory
+            assert all(
+                [rootdir == pp.parent for pp in paths]
+            ), f"Files in multiple directories! {paths}"
+            yield cls(root=rootdir.absolute(), paths=paths)

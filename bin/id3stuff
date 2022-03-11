@@ -26,7 +26,7 @@ or combination of metadata could be used to create a unique hash
 """
 
 import os
-from typing import Sequence, NamedTuple, Iterator, List, Optional, Dict
+from typing import Sequence, List, Optional, Dict
 from functools import partial
 from pathlib import Path
 from pprint import pprint
@@ -34,74 +34,11 @@ from pprint import pprint
 import click
 from mutagen.id3 import ID3, ID3NoHeaderError  # type: ignore[import]
 from mutagen.easyid3 import EasyID3  # type: ignore[import]
-
-
-class Collection(NamedTuple):
-    """
-    either an album, a disc of an album or a single
-    i.e. some flat collection of mp3 files
-    (shouldn't include album art -- that will be searched for later)
-    both should be absolute paths
-    """
-
-    root: Path
-    paths: List[Path]
-
-    @classmethod
-    def iter_ext_collection(
-        cls, rootdir: Path, ext: str = ".mp3"
-    ) -> Iterator["Collection"]:
-        """
-        Given some directory, return any collections under this
-        with a given extension. Defaults to .mp3
-        """
-        if not ext.startswith("."):
-            ext = f".{ext}"
-        # if not given a directory, return
-        if not rootdir.is_dir():
-            return
-        paths: List[Path] = []
-        for f in map(lambda p: p.absolute(), rootdir.iterdir()):
-            if f.is_dir():
-                yield from cls.iter_ext_collection(f, ext=ext)
-            elif f.suffix == ext:
-                paths.append(f.absolute())
-        if len(paths) > 0:
-            # sanity check to make sure these are all in the same directory
-            assert all(
-                [rootdir == pp.parent for pp in paths]
-            ), f"Files in multiple directories! {paths}"
-            yield cls(root=rootdir.absolute(), paths=paths)
+from my.core.__main__ import _ui_getchar_pick  # from https://github.com/karlicoss/HPI
+from plaintext_playlist_py import Collection
 
 
 eprint = partial(click.echo, err=True)
-
-
-def _ui_getchar_pick(choices: Sequence[str], prompt: str = "Select from: ") -> int:
-    """
-    Basic menu allowing the user to select one of the choices
-    returns the index the user chose
-    """
-    assert len(choices) > 0, "Didnt receive any choices to prompt!"
-    eprint(prompt + "\n")
-
-    # prompts like 1,2,3,4,5,6,7,8,9,a,b,c,d,e,f...
-    chr_offset = ord("a") - 10
-
-    # dict from key user can press -> resulting index
-    result_map = {}
-    for i, opt in enumerate(choices, 1):
-        char: str = str(i) if i < 10 else chr(i + chr_offset)
-        result_map[char] = i - 1
-        eprint(f"\t{char}. {opt}")
-
-    eprint("")
-    while True:
-        ch = click.getchar()
-        if ch not in result_map:
-            eprint(f"{ch} not in {list(result_map.keys())}")
-            continue
-        return result_map[ch]
 
 
 OTHER = "Other"

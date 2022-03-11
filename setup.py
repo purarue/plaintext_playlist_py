@@ -4,6 +4,7 @@ from setuptools import setup, find_packages
 long_description = Path("README.md").read_text()
 reqs = Path("requirements.txt").read_text().strip().splitlines()
 
+
 def main() -> None:
     pkg = "plaintext_playlist_py"
     setup(
@@ -38,6 +39,7 @@ def main() -> None:
             "Programming Language :: Python :: 3.10",
         ],
     )
+
 
 if __name__ == "__main__":
     main()
