@@ -10,7 +10,7 @@ Also includes some `ID3`/music scripts:
 
 ## Installation
 
-Requires `python3.10+`
+Runs on `python3.10+`
 
 To install with pip, run:
 
@@ -19,6 +19,8 @@ To install with pip, run:
 ## Usage
 
 `plaintext_playlist_py`
+
+Can run `plaintext_playlist_py list-all` to list all items in playlists
 
 ### Tests
 
