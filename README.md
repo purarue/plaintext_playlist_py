@@ -2,11 +2,11 @@
 
 Library to parse [plaintext-playlist](https://github.com/seanbreckenridge/plaintext-playlist) files
 
-Mostly for personal usage, making this installable as a library means I can use it across code/projects/scripts
+This is mostly for personal usage, making this installable as a library means I can use it across code/projects/scripts
 
 Also includes some `ID3`/music scripts:
 
-- [`bin/id3stuff`](bin/id3stuff) - a personal opinionated script to set ID3 metadata using `mutagen` -- prompts me to set the arist/album/album artist for groups of collections by scanning my music directory
+- [`bin/id3stuff`](bin/id3stuff) - a personal opinionated script to set ID3 metadata on `mp3` files using `mutagen` -- prompts me to set the arist/album/album artist for groups of collections by scanning my music directory
 
 ## Installation
 
