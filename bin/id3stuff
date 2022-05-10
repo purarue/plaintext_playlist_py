@@ -214,7 +214,9 @@ DEFAULT_LINK_TARGET = "cover.jpg"
 
 
 def iter_collection_album_art(collection: Collection, /) -> Iterator[Path]:
-    for fl in collection.root.iterdir():
+    for fl in collection.root.rglob("*"):
+        if fl.is_dir():
+            continue
         for prefix in possible_album_prefixes:
             for suffix in possible_album_suffixes:
                 possible_target = collection.root / f"{prefix}.{suffix}"
@@ -285,7 +287,7 @@ def link_album_art(
         return
     chosen = _pick_image(collection, images, skip_downloads=skip_downloads)
     if chosen is not None:
-        chosen_ext = chosen.suffix
+        chosen_ext = chosen.suffix.lower()
         if chosen_ext == ".jpeg":
             chosen_ext = ".jpg"
         if chosen_ext == target.suffix:
