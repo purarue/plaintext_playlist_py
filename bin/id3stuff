@@ -35,7 +35,7 @@ from pathlib import Path
 from pprint import pprint
 
 import click
-from PIL import Image
+from PIL import Image  # type: ignore[import]
 from mutagen.id3 import ID3, ID3NoHeaderError  # type: ignore[import]
 from mutagen.easyid3 import EasyID3  # type: ignore[import]
 from my.core.__main__ import _ui_getchar_pick  # from https://github.com/karlicoss/HPI
