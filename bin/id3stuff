@@ -6,7 +6,7 @@
 Personal opinionated ID3 stuff
 
 - Make sure everything has a Artist/Album
-- Attach/prompt for Album Art to be added/downloaded if not present
+- prompt for Album Art to be copied/downloaded to 'cover.jpg' if not present
 
 In the future... ?
 
@@ -26,12 +26,16 @@ or combination of metadata could be used to create a unique hash
 """
 
 import os
-from typing import Sequence, List, Optional, Dict
+import tempfile
+import shutil
+import subprocess
+from typing import Sequence, List, Optional, Dict, Iterator
 from functools import partial
 from pathlib import Path
 from pprint import pprint
 
 import click
+from PIL import Image
 from mutagen.id3 import ID3, ID3NoHeaderError  # type: ignore[import]
 from mutagen.easyid3 import EasyID3  # type: ignore[import]
 from my.core.__main__ import _ui_getchar_pick  # from https://github.com/karlicoss/HPI
@@ -125,7 +129,7 @@ def _extract_current_id3_data(mp3: Path) -> Sequence[str]:
 
 
 def attach_basic_id3_metadata(
-    base_music_dir: Path, collection: Collection, force: bool = False
+    *, base_music_dir: Path, collection: Collection, force: bool = False
 ) -> None:
     """
     Track Name
@@ -191,21 +195,110 @@ def attach_basic_id3_metadata(
                         id3f.save()
 
 
-def attach_album_art(collection: Collection) -> None:
+# https://github.com/mpv-player/mpv/blob/3d9c0eae9e4d42494b9435ad3cf5c31217e262ad/player/external_files.c#L49-L69
+possible_album_prefixes = (
+    "front",
+    "cover",
+    "folder",
+    ".folder" "albumart",
+    "album",
+    "albumartsmall",
+    "thumb",
+)
+
+possible_album_suffixes = ("jpg", "jpeg", "png")
+
+
+# seems to make the most sense to me/is supported by foobar2000 mobile, so lets use that
+DEFAULT_LINK_TARGET = "cover.jpg"
+
+
+def iter_collection_album_art(collection: Collection, /) -> Iterator[Path]:
+    for fl in collection.root.iterdir():
+        for prefix in possible_album_prefixes:
+            for suffix in possible_album_suffixes:
+                possible_target = collection.root / f"{prefix}.{suffix}"
+                if str(fl).casefold() == str(possible_target).casefold():
+                    yield fl
+
+
+id3stuff_tmp = os.path.join(tempfile.gettempdir(), "id3stuff")
+
+
+def id3stuff_tempdir() -> Path:
+    return Path(tempfile.mkdtemp(dir=id3stuff_tmp))
+
+
+def _download_remote_image(c: Collection, /) -> Path | None:
     """
-    Check if the mp3 already has album art.
-    If it doesn't, try:
-        - local dir/recursively check any possible 'Images/Artwork'-like dirs
-        - accept a link or filepath to download/attach, as cover.[jpg/png]
-
-    Copy/Link that to 'cover.png'/'cover.jpg' if it doesn't already exist
-
-    convert a copy to 500x_ and save that as .scover.jpg, and then
-    embed it using an APIC frame since thats most likely to be supported by media players
-
-    So we keep the high quality for mpv, and then lower quality for all
-    other possible media players
+    returns a path to a downloaded album art in /tmp/id3stuff
     """
+    return None
+    # tdir = id3stuff_tempdir()
+
+
+KITTY_PATH = shutil.which("kitty")
+
+
+def _print_kitty_images(imgs: List[Path]) -> None:
+    if os.environ.get("TERM") != "xterm-kitty":
+        return
+    assert KITTY_PATH is not None, f"could not find kitty on your path"
+    for img in imgs:
+        print(f"\n{img}\n")
+        subprocess.run([KITTY_PATH, "icat", str(img)])
+
+
+def _pick_image(
+    c: Collection, imgs: List[Path], /, *, skip_downloads: bool
+) -> Path | None:
+    _print_kitty_images(imgs)
+    if len(imgs) == 1:
+        if click.confirm(f"Use {imgs[0]}?", default=True):
+            return imgs[0]
+    if len(imgs) > 1:
+        # prompt to pick one of the paths
+        getchar_choices = [str(f.absolute()) for f in imgs] + [OTHER]
+        picked_index = _ui_getchar_pick(getchar_choices)
+        picked_selection = getchar_choices[picked_index]
+        if picked_selection != OTHER:
+            pth = Path(picked_selection)
+            assert pth.exists(), f"path {pth} doesnt exist"
+            return pth
+    if not skip_downloads and click.confirm(
+        "Enter URL to download image from?", default=False
+    ):
+        return _download_remote_image(c)
+    return None
+
+
+def link_album_art(
+    collection: Collection,
+    /,
+    *,
+    to_filename: str = DEFAULT_LINK_TARGET,
+    skip_downloads: bool = True,
+) -> None:
+    images = list(iter_collection_album_art(collection))
+    target = collection.root / to_filename
+    if target.exists():
+        return
+    chosen = _pick_image(collection, images, skip_downloads=skip_downloads)
+    if chosen is not None:
+        chosen_ext = chosen.suffix
+        if chosen_ext == ".jpeg":
+            chosen_ext = ".jpg"
+        if chosen_ext == target.suffix:
+            click.echo(f"Linking '{chosen}' to '{target}'", err=True)
+            target.hardlink_to(chosen)
+        elif chosen_ext == ".png":
+            click.echo(f"Converting '{chosen}' to '{target}'", err=True)
+            img = Image.open(chosen)
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+            img.save(str(target.absolute()))
+        else:
+            click.echo(f"Dont know how to convert extension {chosen_ext}")
 
 
 def default_music_dir() -> Path:
@@ -242,9 +335,27 @@ def default_music_dir() -> Path:
     default=False,
     help="Force prompts for every attribute",
 )
+@click.option(
+    "--link-cover-to",
+    default=DEFAULT_LINK_TARGET,
+    help="Filename to link/convert album art to",
+)
+@click.option(
+    "--skip-downloads/--no-skip-downloads",
+    is_flag=True,
+    default=True,
+    help="Skip asking to download art for images",
+)
 @click.option("--reverse", is_flag=True, default=False)
 @click.argument("PATH", type=click.Path(exists=True), required=False)
-def main(_print: bool, path: Optional[str], force: bool, reverse: bool) -> None:
+def main(
+    _print: bool,
+    path: Optional[str],
+    force: bool,
+    link_cover_to: str,
+    skip_downloads: bool,
+    reverse: bool,
+) -> None:
     chosen_dir: Path
     if path is not None:
         chosen_dir = Path(path)
@@ -265,6 +376,7 @@ def main(_print: bool, path: Optional[str], force: bool, reverse: bool) -> None:
             attach_basic_id3_metadata(
                 base_music_dir=chosen_dir, collection=c, force=force
             )
+            link_album_art(c, to_filename=link_cover_to, skip_downloads=skip_downloads)
 
 
 if __name__ == "__main__":

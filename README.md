@@ -7,6 +7,7 @@ This is mostly for personal usage, making this installable as a library means I 
 Also includes some `ID3`/music scripts:
 
 - [`bin/id3stuff`](bin/id3stuff) - a personal opinionated script to set ID3 metadata on `mp3` files using `mutagen` -- prompts me to set the arist/album/album artist for groups of collections by scanning my music directory
+- [`bin/linkmusic`](bin/linkmusic) - a `rsync`-like script which creates hardlinks for every file in my playlists into a separate directory (e.g., `~/.local/share/musicsync/`). Then, I use [`syncthing`](https://github.com/syncthing/syncthing) to sync all the songs in my playlists across my computers/onto my phone, without syncing my entire music collection
 
 ## Installation
 

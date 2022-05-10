@@ -1,4 +1,6 @@
 import os
+import warnings
+from typing import Union
 
 import subprocess
 from pathlib import Path
@@ -32,6 +34,9 @@ class PlaylistPath(NamedTuple):
     def in_musicdir(self) -> Path:
         return self.in_dir(musicdir())
 
+    def collection_root(self) -> Path:
+        return self.in_musicdir().parent
+
 
 def iterate_playlists(playlist_txt_dir: Path | None = None) -> Iterator[PlaylistPath]:
     """
@@ -63,8 +68,27 @@ class Collection(NamedTuple):
     paths: list[Path]
 
     @classmethod
+    def from_root(
+        cls,
+        rootdir: Path,
+        /,
+        ext: str = ".mp3",
+    ) -> Union["Collection", None]:
+        res = list(cls.iter_ext_collection(rootdir, ext=ext, recursive=False))
+        if len(res) == 0:
+            warnings.warn(f"Could not find any '{ext}' files in {rootdir}")
+            return None
+        assert len(res) == 1, f"Expected only one Collection, found {len(res)}"
+        return res[0]
+
+    @classmethod
     def iter_ext_collection(
-        cls, rootdir: Path, ext: str = ".mp3"
+        cls,
+        rootdir: Path,
+        /,
+        *,
+        ext: str = ".mp3",
+        recursive: bool = True,
     ) -> Iterator["Collection"]:
         """
         Given some directory, return any collections under this
@@ -77,8 +101,8 @@ class Collection(NamedTuple):
             return
         paths: list[Path] = []
         for f in map(lambda p: p.absolute(), rootdir.iterdir()):
-            if f.is_dir():
-                yield from cls.iter_ext_collection(f, ext=ext)
+            if recursive and f.is_dir():
+                yield from cls.iter_ext_collection(f, ext=ext, recursive=True)
             elif f.suffix == ext:
                 paths.append(f.absolute())
         if len(paths) > 0:
