@@ -64,7 +64,6 @@ def remove_empty_dir(path: str, *, cover_image_name: str) -> None:
     if os.listdir(path) == [cover_image_name]:
         cover_img = os.path.join(path, cover_image_name)
         assert os.path.exists(cover_img), f"Expected {cover_img} to exist"
-        breakpoint()
         logger.debug(f"Removing {cover_img}")
         os.unlink(cover_img)
     try:
