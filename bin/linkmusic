@@ -87,6 +87,20 @@ def remove_empty_dirs(path: str, *, cover_image_name: str) -> None:
             )
 
 
+def _hardlink_file(source: Path, target: Path) -> None:
+    if not target.exists() or target.stat().st_size != source.stat().st_size:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists():
+            # source and target are different files -- so I probably trimmed or changed
+            # the file -- should remove the target musicsync file
+            logger.info(
+                f"Target '{target}' exists, size didn't match -- removing and re-linking..."
+            )
+            target.unlink()
+        logger.info(f"Linking from '{source}' to '{target}'")
+        target.hardlink_to(source)
+
+
 def hardlink_sync_dirs(
     files: list[PlaylistPath], *, cover_image_name: str, to_dir: Path, delete: bool
 ) -> None:
@@ -110,17 +124,7 @@ def hardlink_sync_dirs(
         source = p.in_musicdir()
         if p.collection_root() not in seen_source_collection_roots:
             seen_source_collection_roots[p.collection_root()] = p
-        if not target.exists() or target.stat().st_size != source.stat().st_size:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            if target.exists():
-                # source and target are different files -- so I probably trimmed or changed
-                # the audio file -- should remove the target musicsync file
-                logger.info(
-                    f"Target '{target}' exists, size didn't match -- removing and re-linking..."
-                )
-                target.unlink()
-            logger.info(f"Linking from '{source}' to '{target}'")
-            target.hardlink_to(source)
+        _hardlink_file(source, target)
         # remove from set, so at the end we can check
         # the set. If theres anything left in it,
         # that wasn't included in the 'files' list,
@@ -143,10 +147,7 @@ def hardlink_sync_dirs(
                 seen_source_collection_roots[collection_root_path].in_dir(to_dir).parent
             )
             assert sync_to_dir.stem == collection.root.stem
-            sync_to_dir_cover_art = sync_to_dir / cover_image_name
-            if not sync_to_dir_cover_art.exists():
-                logger.info(f"Linking from '{cover_art}' to '{sync_to_dir_cover_art}'")
-                sync_to_dir_cover_art.hardlink_to(cover_art)
+            _hardlink_file(cover_art, sync_to_dir / cover_image_name)
         else:
             pass
             # logger.debug(f"No cover art at '{cover_art}' exists")

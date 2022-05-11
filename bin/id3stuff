@@ -349,44 +349,63 @@ def _pick_image(
     return None
 
 
-def link_album_art(
+def _convert_image(chosen: Path | None, target: Path, /) -> None:
+    if chosen is None:
+        return
+    chosen_ext = chosen.suffix.lower()
+    # if filename doesnt have an extension, load the image and infer
+    if chosen_ext == "":
+        with chosen.open("rb") as img_f:
+            img = Image.open(img_f)
+            chosen_ext = f".{str(img.format).casefold()}"
+    # convert '.jpeg' to '.jpg'
+    if chosen_ext == ".jpeg":
+        chosen_ext = ".jpg"
+    if chosen_ext == target.suffix:
+        if "id3stuff-temp" in str(chosen):
+            # prevent cross-device (/tmp) links
+            eprint(f"Copying '{chosen}' to '{target}'")
+            shutil.copyfile(chosen, target)
+        else:
+            eprint(f"Linking '{chosen}' to '{target}'")
+            target.hardlink_to(chosen)
+    elif chosen_ext == ".png":
+        eprint(f"Converting '{chosen}' to '{target}'")
+        img = Image.open(chosen)
+        # remove transparency if present
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        img.save(str(target.absolute()))
+    else:
+        click.echo(f"Dont know how to convert extension {chosen_ext}")
+
+
+def _remove_apic_frames(collection: Collection, /) -> None:
+    for file in collection.paths:
+        tags = ID3(file)
+        apic_frames = tags.getall("APIC")
+        if frame_count := len(apic_frames):
+            eprint(f"Removing {frame_count} APIC frames from {file}")
+            tags.delall("APIC")
+            tags.save()
+
+
+def manage_album_art(
     collection: Collection,
     /,
     *,
+    remove_embedded_album_art: bool,
     to_filename: str = DEFAULT_LINK_TARGET,
     skip_downloads: bool = True,
 ) -> None:
     images = list(iter_collection_images(collection))
     images += _extract_apic_album_art(collection)
     target = collection.root / to_filename
-    if target.exists():
-        return
-    chosen = _pick_image(collection, images, skip_downloads=skip_downloads)
-    if chosen is not None:
-        chosen_ext = chosen.suffix.lower()
-        # if filename doesnt have an extension, load the image and infer
-        if chosen_ext == "":
-            with chosen.open("rb") as img_f:
-                img = Image.open(img_f)
-                chosen_ext = f".{str(img.format).casefold()}"
-        if chosen_ext == ".jpeg":
-            chosen_ext = ".jpg"
-        if chosen_ext == target.suffix:
-            if "id3stuff-temp" in str(chosen):
-                # prevent cross-device (/tmp) links
-                eprint(f"Copying '{chosen}' to '{target}'")
-                shutil.copyfile(chosen, target)
-            else:
-                eprint(f"Linking '{chosen}' to '{target}'")
-                target.hardlink_to(chosen)
-        elif chosen_ext == ".png":
-            eprint(f"Converting '{chosen}' to '{target}'")
-            img = Image.open(chosen)
-            if img.mode in ("RGBA", "P"):
-                img = img.convert("RGB")
-            img.save(str(target.absolute()))
-        else:
-            click.echo(f"Dont know how to convert extension {chosen_ext}")
+    if not target.exists():
+        chosen = _pick_image(collection, images, skip_downloads=skip_downloads)
+        _convert_image(chosen, target)
+    if target.exists() and remove_embedded_album_art:
+        _remove_apic_frames(collection)
 
 
 def default_music_dir() -> Path:
@@ -433,6 +452,12 @@ def default_music_dir() -> Path:
     default=False,
     help="Skip asking to download art for images",
 )
+@click.option(
+    "--remove-embedded-album-art/--keep-embedded-album-art",
+    is_flag=True,
+    default=False,
+    help="Remove embedded album art in APIC frames from MP3 files, if they're present",
+)
 @click.option("--reverse", is_flag=True, default=False)
 @click.argument("PATH", type=click.Path(exists=True), required=False)
 def main(
@@ -440,6 +465,7 @@ def main(
     path: Optional[str],
     force: bool,
     link_cover_to: str,
+    remove_embedded_album_art: bool,
     skip_downloads: bool,
     reverse: bool,
 ) -> None:
@@ -465,7 +491,12 @@ def main(
             attach_basic_id3_metadata(
                 base_music_dir=chosen_dir, collection=c, force=force
             )
-            link_album_art(c, to_filename=link_cover_to, skip_downloads=skip_downloads)
+            manage_album_art(
+                c,
+                to_filename=link_cover_to,
+                skip_downloads=skip_downloads,
+                remove_embedded_album_art=remove_embedded_album_art,
+            )
 
 
 if __name__ == "__main__":
