@@ -36,6 +36,7 @@ def main(command: str) -> None:
             for al in albums:
                 data = _album_data(safe_id3(al.paths[0]))
                 data["count"] = len(al.paths)
+                data["root"] = str(al.root)
                 print(json.dumps(data))
         case "repl":
             import IPython  # type: ignore[import]
