@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+
+import json
+from typing import Dict, cast, List, Union
+
+import click
+from mutagen.easyid3 import EasyID3
+from plaintext_playlist_py import Collection, default_music_dir
+from plaintext_playlist_py.id3 import safe_id3, BASIC_TAGS
+
+ALBUM_TAGS = list(BASIC_TAGS)
+ALBUM_TAGS.remove("title")
+
+
+JsonInfo = Dict[str, Union[str, int]]
+
+
+def _album_data(id3: EasyID3) -> JsonInfo:
+    data: JsonInfo = {}
+    for tag in ALBUM_TAGS:
+        resp = cast(List[str], id3.get(tag))
+        try:
+            data[tag] = resp[0]
+        except IndexError as e:
+            data[tag] = ""
+            click.echo(f"{id3}: {e}", err=True)
+    return data
+
+
+@click.command()
+@click.argument("COMMAND", type=click.Choice(["json", "repl"]), default="json")
+def main(command: str) -> None:
+    albums = list(Collection.iter_ext_collection(default_music_dir()))
+    match command:
+        case "json":
+            for al in albums:
+                data = _album_data(safe_id3(al.paths[0]))
+                data["count"] = len(al.paths)
+                print(json.dumps(data))
+        case "repl":
+            import IPython  # type: ignore[import]
+
+            _gr = click.style("albums", "green")
+            click.echo(f"Use the '{_gr}' variable to interact")
+            IPython.embed()
+
+
+if __name__ == "__main__":
+    main(prog_name="albums-info")

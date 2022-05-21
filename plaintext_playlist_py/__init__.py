@@ -1,6 +1,7 @@
 import os
 import warnings
 from typing import Union
+from pathlib import Path
 
 import subprocess
 from pathlib import Path
@@ -111,3 +112,21 @@ class Collection(NamedTuple):
                 [rootdir == pp.parent for pp in paths]
             ), f"Files in multiple directories! {paths}"
             yield cls(root=rootdir.absolute(), paths=paths)
+
+
+def default_music_dir() -> Path:
+    for env_key in ("PLAINTEXT_PLAYLIST_MUSIC_DIR", "XDG_MUSIC_DIR"):
+        if env_key in os.environ:
+            p = Path(os.environ[env_key])
+            if p.exists():
+                return p
+            else:
+                warnings.warn(
+                    f"Using default {env_key}, path {os.environ[env_key]} doesn't exist!"
+                )
+    click.secho(
+        "No music dir found in the environment -- set the XDG_MUSIC_DIR environment variable",
+        err=True,
+        fg="red",
+    )
+    raise SystemExit(1)

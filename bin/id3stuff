@@ -40,10 +40,10 @@ from pprint import pprint
 import click
 import requests
 from PIL import Image  # type: ignore[import]
-from mutagen.id3 import ID3, ID3NoHeaderError  # type: ignore[import]
-from mutagen.easyid3 import EasyID3  # type: ignore[import]
+from mutagen.id3 import ID3  # type: ignore[import]
 from my.core.__main__ import _ui_getchar_pick  # from https://github.com/karlicoss/HPI
-from plaintext_playlist_py import Collection
+from plaintext_playlist_py import Collection, default_music_dir
+from plaintext_playlist_py.id3 import safe_id3, BASIC_TAGS
 
 
 eprint = partial(click.echo, err=True)
@@ -71,25 +71,6 @@ def _pick_and_or_edit(choices: List[str], prompt: str = "Select from:") -> str:
             chosen = res.strip()
 
     return chosen
-
-
-# whether to prompt individually each time
-BASIC_TAGS: Dict[str, bool] = {
-    "title": True,
-    "artist": False,
-    "album": False,
-    "albumartist": False,
-}
-
-
-def safe_id3(f: Path) -> EasyID3:
-    try:
-        return EasyID3(f)
-    except ID3NoHeaderError:
-        # create a empty ID3 frame if nothing exists
-        new_data = ID3()
-        new_data.save(f)
-        return EasyID3(f)
 
 
 # if key is None, checks all BASIC_TAGS. else, checks the one you specify
@@ -406,24 +387,6 @@ def manage_album_art(
         _convert_image(chosen, target)
     if target.exists() and remove_embedded_album_art:
         _remove_apic_frames(collection)
-
-
-def default_music_dir() -> Path:
-    for env_key in ("PLAINTEXT_PLAYLIST_MUSIC_DIR", "XDG_MUSIC_DIR"):
-        if env_key in os.environ:
-            p = Path(os.environ[env_key])
-            if not p.exists():
-                eprint(
-                    f"Using default {env_key}, path {os.environ[env_key]} doesn't exist!",
-                )
-                continue
-            return p
-    click.secho(
-        "No music dir found in the environment -- set the XDG_MUSIC_DIR environment variable",
-        err=True,
-        fg="red",
-    )
-    raise SystemExit(1)
 
 
 @click.command(name=__name__)
