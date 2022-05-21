@@ -1,12 +1,10 @@
 import os
 import warnings
-from typing import Union
+import subprocess
+from typing import Iterator, NamedTuple, Union
+from functools import lru_cache
 from pathlib import Path
 
-import subprocess
-from pathlib import Path
-from typing import Iterator, NamedTuple
-from functools import lru_cache
 
 import click
 
