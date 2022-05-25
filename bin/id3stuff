@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
-## Still a WIP
-
 """
-Personal opinionated ID3 stuff
+Personal opinionated ID3 stuff -- forever a WIP script
 
-- Make sure everything has a Artist/Album
-- prompt for Album Art to be copied/downloaded to 'cover.jpg' if not present
+- Make sure every song has track, album, artist and album artist ID3 data
+- Prompt for Album Art to be copied/extracted from APIC frames/downloaded to 'cover.jpg' if not present
 
 In the future... ?
 
@@ -15,14 +13,15 @@ In the future... ?
 - Perhaps make this Plex Compliant with some other tool?
 - Add Year
 - Add Genre
-- Add Lyrics
+
+It could be used to:
 - Remove Comments/Useless Data
 
-For things like comments/removing data, is sort of hard to imagine doing
-this without mainting some sort of index of what I've asked for previously
+but currently I use a separate mpv_clean_priv_frames:
+https://github.com/seanbreckenridge/HPI-personal/blob/master/scripts/mpv_clean_priv_frames
 
-Shouldn't use the path name since this modifies path names, so perhaps some hash
-or combination of metadata could be used to create a unique hash
+which searches https://github.com/seanbreckenridge/mpv-history-daemon
+data instead of pre-emptively removing possibly useful metadata
 """
 
 import os
@@ -183,17 +182,6 @@ def attach_basic_id3_metadata(
                         id3f[tag] = new_data
                         id3f.save()
 
-
-# https://github.com/mpv-player/mpv/blob/3d9c0eae9e4d42494b9435ad3cf5c31217e262ad/player/external_files.c#L49-L69
-# possible_album_prefixes = (
-#    "front",
-#    "cover",
-#    "folder",
-#    ".folder" "albumart",
-#    "album",
-#    "albumartsmall",
-#    "thumb",
-# )
 
 possible_album_suffixes = ("jpg", "jpeg", "png")
 
