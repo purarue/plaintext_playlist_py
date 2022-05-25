@@ -418,7 +418,7 @@ def manage_album_art(
 @click.option(
     "--remove-embedded-album-art/--keep-embedded-album-art",
     is_flag=True,
-    default=False,
+    default=True,
     help="Remove embedded album art in APIC frames from MP3 files, if they're present",
 )
 @click.option("--reverse", is_flag=True, default=False)
