@@ -312,8 +312,7 @@ def _pick_image(
     if not skip_downloads and click.confirm("Search for URL?", default=True):
         downloaded = _fetch_remote_image(c)
         if downloaded is not None:
-            imgs = [downloaded]
-            _print_kitty_images(imgs)
+            _print_kitty_images([downloaded])
             return downloaded
     return None
 
