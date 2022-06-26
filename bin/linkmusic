@@ -46,7 +46,7 @@ def _check_os() -> None:
             "$ON_OS environment variable is none. Set to 'linux' to let this run"
         )
     else:
-        if ON_OS == "linux":
+        if ON_OS.startswith("linux"):
             return
         raise ValueError(
             "$ON_OS environment variable is not linux. This should only run on my linux machine"
