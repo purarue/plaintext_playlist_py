@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+# asks me to add something to playlist that I listen to in the car
+
+import os
+import json
+import atexit
+import shlex
+import subprocess
+from pathlib import Path
+
+import click
+from my.core.__main__ import _ui_getchar_pick
+from plaintext_playlist_py import playlistdir, PlaylistPath, iterate_playlists
+
+
+Lines = set[str]
+
+already_prompted_cache = (
+    Path(os.environ["XDG_DOCUMENTS_DIR"]) / "car_playlist_prompted.json"
+)
+
+
+class JSONCache:
+    def __init__(self):
+        self.load_data()
+
+    def __contains__(self, data: PlaylistPath) -> bool:
+        return data.path in self.data
+
+    def load_data(self) -> Lines:
+        self.datafile = already_prompted_cache
+        self.data: Lines = set()
+        if self.datafile.exists():
+            self.data = set(json.loads(self.datafile.read_text()))
+        return self.data
+
+    def add_line(self, data: PlaylistPath) -> None:
+        self.data.add(data.path)
+        self._write()
+
+    def _write(self):
+        encoded = json.dumps(list(sorted(self.data)), indent=4)
+        self.datafile.write_text(encoded)
+
+
+cache = JSONCache()
+atexit.register(lambda: cache._write())
+
+
+def add_line(path: PlaylistPath, to_playlist: str = "car") -> None:
+    with open(playlistdir() / f"{to_playlist}.txt", "a") as f:
+        f.write(f"{path.path}\n")
+
+
+def mpv(mp3: str) -> None:
+    # todo: lookup in $PATH?
+    cmd = shlex.split(f'/usr/bin/mpv "{mp3}" --no-audio-display')
+    proc = subprocess.Popen(cmd)
+    proc.wait()
+
+
+def prompt(
+    path: PlaylistPath, to_playlist: str = "car", autoplay: bool = False
+) -> None:
+    f = str(path.in_musicdir().absolute())
+    if autoplay:
+        mpv(f)
+
+    choices = ["add", "skip", "mpv"]
+
+    click.clear()
+    chosen = choices[_ui_getchar_pick(choices, prompt=str(path.path))]
+    if chosen == "mpv":
+        mpv(f)
+        prompt(path, to_playlist)  # recurse
+    else:
+        if chosen == "add":
+            add_line(path, to_playlist)
+        cache.add_line(path)
+
+
+@click.command()
+@click.option(
+    "-a", "--autoplay", is_flag=True, default=False, help="play mpv automatically"
+)
+def main(autoplay: bool) -> None:
+    for pp in iterate_playlists():
+        if pp not in cache:
+            prompt(pp, autoplay=autoplay)
+
+
+if __name__ == "__main__":
+    main()

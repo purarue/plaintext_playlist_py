@@ -40,36 +40,12 @@ import click
 import requests
 from PIL import Image  # type: ignore[import]
 from mutagen.id3 import ID3  # type: ignore[import]
-from my.core.__main__ import _ui_getchar_pick  # from https://github.com/karlicoss/HPI
 from plaintext_playlist_py import Collection, default_music_dir
 from plaintext_playlist_py.id3 import safe_id3, BASIC_TAGS
+from plaintext_playlist_py.ui import _ui_getchar_pick, pick_and_or_edit, OTHER
 
 
 eprint = partial(click.echo, err=True)
-
-
-OTHER = "Other"
-
-
-def _pick_and_or_edit(choices: List[str], prompt: str = "Select from:") -> str:
-    """
-    Pick from the choices (parts of the Path) to start off with
-    then possibly edit the text in your editor to get it to exactly what you want
-    """
-
-    ch = list(choices)
-    ch.append(OTHER)
-
-    chosen = ch[_ui_getchar_pick(ch, prompt=prompt)]
-    if chosen == OTHER:
-        chosen = ""
-
-    if chosen == "" or click.confirm(f"Edit {chosen}?", default=False):
-        res = click.edit(chosen)
-        if res is not None:  # None if no changes made to text
-            chosen = res.strip()
-
-    return chosen
 
 
 # if key is None, checks all BASIC_TAGS. else, checks the one you specify
@@ -161,7 +137,7 @@ def attach_basic_id3_metadata(
                     if tag not in id3f or force:
                         click.echo(f"Editing {click.style(tag, fg='red')} for {f}")
                         new_data = [
-                            _pick_and_or_edit(
+                            pick_and_or_edit(
                                 cc, f"Pick closest to {click.style(tag, fg='red')}"
                             )
                         ]
@@ -171,7 +147,7 @@ def attach_basic_id3_metadata(
                         id3f.save()
             else:
                 new_data = [
-                    _pick_and_or_edit(
+                    pick_and_or_edit(
                         choices, f"Pick closest to {click.style(tag, fg='red')}"
                     )
                 ]
