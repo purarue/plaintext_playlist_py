@@ -15,9 +15,9 @@ BASIC_TAGS: Dict[str, bool] = {
 
 def safe_id3(f: Path) -> EasyID3:
     try:
-        return EasyID3(f)
+        return EasyID3(f)  # type: ignore[no-untyped-call]
     except ID3NoHeaderError:
         # create a empty ID3 frame if nothing exists
-        new_data = ID3()
+        new_data = ID3()  # type: ignore[no-untyped-call]
         new_data.save(f)
-        return EasyID3(f)
+        return EasyID3(f)  # type: ignore[no-untyped-call]
