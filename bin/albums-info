@@ -2,6 +2,7 @@
 
 import json
 from typing import Dict, cast, List, Union
+from pathlib import Path
 
 import click
 from mutagen.easyid3 import EasyID3
@@ -28,10 +29,15 @@ def _album_data(id3: EasyID3) -> JsonInfo:
 
 
 @click.command()
-@click.argument("COMMAND", type=click.Choice(["json", "repl"]), default="json")
-def main(command: str) -> None:
-    albums = list(Collection.iter_ext_collection(default_music_dir()))
-    match command:
+@click.option("-c", "--cmd", type=click.Choice(["json", "repl"]), default="json")
+@click.argument(
+    "DIRECTORY",
+    type=click.Path(exists=True, dir_okay=True, file_okay=False, path_type=Path),
+    default=default_music_dir(),
+)
+def main(cmd: str, directory: Path) -> None:
+    albums = list(Collection.iter_ext_collection(directory))
+    match cmd:
         case "json":
             for al in albums:
                 data = _album_data(safe_id3(al.paths[0]))
