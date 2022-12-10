@@ -95,7 +95,7 @@ def main(autoplay: bool) -> None:
     while len(paths) > 0:
         newest = paths.pop(0)
         prompt(newest, cache, autoplay=autoplay, msg=f" ({len(paths) + 1} left)")
-    click.secho(f"car_playlist: {click.style('done','green')}")
+    click.secho(f"car-playlist: {click.style('done','green')}")
 
 
 if __name__ == "__main__":
