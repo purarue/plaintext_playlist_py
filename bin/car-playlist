@@ -7,6 +7,7 @@ import atexit
 import shlex
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 import click
 from my.core.__main__ import _ui_getchar_pick
@@ -43,10 +44,6 @@ class JSONCache:
         self.datafile.write_text(encoded)
 
 
-cache = JSONCache()
-atexit.register(lambda: cache._write())
-
-
 def add_line(path: PlaylistPath, to_playlist: str = "car") -> None:
     with open(playlistdir() / f"{to_playlist}.txt", "a") as f:
         f.write(f"{path.path}\n")
@@ -60,7 +57,12 @@ def mpv(mp3: str) -> None:
 
 
 def prompt(
-    path: PlaylistPath, to_playlist: str = "car", autoplay: bool = False
+    path: PlaylistPath,
+    cache: JSONCache,
+    *,
+    to_playlist: str = "car",
+    autoplay: bool = False,
+    msg: Optional[str] = None,
 ) -> None:
     f = str(path.in_musicdir().absolute())
     if autoplay:
@@ -68,11 +70,14 @@ def prompt(
 
     choices = ["add", "skip", "mpv"]
 
+    promptstr = str(path.path)
+    if msg:
+        promptstr += msg
     click.clear()
-    chosen = choices[_ui_getchar_pick(choices, prompt=str(path.path))]
+    chosen = choices[_ui_getchar_pick(choices, prompt=promptstr)]
     if chosen == "mpv":
         mpv(f)
-        prompt(path, to_playlist)  # recurse
+        prompt(path, cache, to_playlist=to_playlist, msg=msg)  # recurse
     else:
         if chosen == "add":
             add_line(path, to_playlist)
@@ -84,9 +89,13 @@ def prompt(
     "-a", "--autoplay", is_flag=True, default=False, help="play mpv automatically"
 )
 def main(autoplay: bool) -> None:
-    for pp in iterate_playlists():
-        if pp not in cache:
-            prompt(pp, autoplay=autoplay)
+    cache = JSONCache()
+    atexit.register(lambda: cache._write())
+    paths = [pp for pp in iterate_playlists() if pp not in cache]
+    while len(paths) > 0:
+        newest = paths.pop(0)
+        prompt(newest, cache, autoplay=autoplay, msg=f" ({len(paths) + 1} left)")
+    click.secho(f"car_playlist: {click.style('done','green')}")
 
 
 if __name__ == "__main__":
