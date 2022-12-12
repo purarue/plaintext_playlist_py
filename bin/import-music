@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# this uses https://beets.io/ for the majority of tagging/fixing tags
+# and then for recently modified directories:
+# - fetches genres use the 'beet lastgenre' command
+# - uses my personal idstuff command to check some edge cases and album art/embedded art
+
+set -e
+set -o pipefail
+
+recent_albums() {
+	fd --changed-within 1h --min-depth 2 --max-depth 3 -x echo "{//}" | unique
+}
+
+main() {
+	# use beet to import music
+	dir="${1:-"${XDG_DOWNLOAD_DIR?:No xdg downloads dir set}/Sort"}"
+	shift
+	cd "$dir" || exit $?
+	beet import --move --noincremental --from-scratch "$@" "${dir}"
+	# go to music dir and update genres/fix album art for directories that have recently changed
+	cd "${XDG_MUSIC_DIR?:No music dir set}" || exit $?
+	# create array of recent albums
+	local -a recent=()
+	while read -r al; do
+		recent+=("$al")
+	done < <(recent_albums)
+
+	# run each with id3stuff/lastgenre
+	for album in "${recent[@]}"; do
+		id3stuff --remove-embedded-album-art "${album}"
+	done
+	for album in "${recent[@]}"; do
+		beet lastgenre "${album}"
+	done
+}
+
+main "$@" || exit $?

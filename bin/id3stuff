@@ -120,7 +120,9 @@ def attach_basic_id3_metadata(
                     data = id3f[stag][0]
                     if data != data.strip():
                         new_data = [data.strip()]
-                        click.echo(f"Adding {stag}={new_data} for {f}...")
+                        click.echo(
+                            f"Removing extra spaces for {stag}={new_data} for {f}... (previously '{data}')"
+                        )
                         id3f[stag] = new_data
                         id3f.save()
 
