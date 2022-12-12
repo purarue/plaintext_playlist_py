@@ -5,7 +5,7 @@ from typing import Dict, cast, List, Union
 from pathlib import Path
 
 import click
-from mutagen.easyid3 import EasyID3
+from mutagen.easyid3 import EasyID3  # type: ignore[import]
 from plaintext_playlist_py import Collection, default_music_dir
 from plaintext_playlist_py.id3 import safe_id3, BASIC_TAGS
 
