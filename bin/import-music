@@ -25,9 +25,7 @@ main() {
 	done < <(recent_albums)
 
 	# run each with id3stuff/lastgenre
-	for album in "${recent[@]}"; do
-		id3stuff --remove-embedded-album-art "${album}"
-	done
+	id3stuff --remove-embedded-album-art "${recent[@]}"
 
 	# import once all data has been fixed in ~/Music
 	# so that beet remembers its been imported

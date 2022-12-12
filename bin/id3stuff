@@ -15,6 +15,7 @@ import subprocess
 import webbrowser
 from urllib.parse import urlparse
 from io import BytesIO
+from itertools import chain
 from typing import Sequence, List, Optional, Dict, Iterator, Union
 from functools import partial
 from pathlib import Path
@@ -22,6 +23,7 @@ from pprint import pprint
 
 import click
 import requests
+from more_itertools import unique_everseen
 from PIL import Image  # type: ignore[import]
 from mutagen.id3 import ID3  # type: ignore[import]
 from plaintext_playlist_py import Collection, default_music_dir
@@ -371,10 +373,10 @@ def manage_album_art(
     help="Remove embedded album art in APIC frames from MP3 files, if they're present",
 )
 @click.option("--reverse", is_flag=True, default=False)
-@click.argument("PATH", type=click.Path(exists=True), required=False)
+@click.argument("PATH", type=click.Path(exists=True), required=False, nargs=-1)
 def main(
     _print: bool,
-    path: Optional[str],
+    path: Sequence[str],
     force: bool,
     link_cover_to: str,
     remove_embedded_album_art: bool,
@@ -383,17 +385,24 @@ def main(
 ) -> None:
     if not id3stuff_tmp.exists():
         id3stuff_tmp.mkdir(parents=True)
-    chosen_dir: Path
-    if path is not None:
-        chosen_dir = Path(path)
+    chosen_dir: List[Path] = []
+    if path:
+        chosen_dir += [Path(s) for s in path]
     else:
-        chosen_dir = default_music_dir()
-    collections = list(
-        sorted(
-            Collection.iter_ext_collection(chosen_dir.absolute(), ext="mp3"),
-            key=lambda c: str(c.root).casefold(),
-            reverse=reverse,
-        )
+        chosen_dir.append(default_music_dir())
+    # chain/dedupe then sort all input files
+    collections = sorted(
+        unique_everseen(
+            chain(
+                *[
+                    Collection.iter_ext_collection(c.absolute(), ext="mp3")
+                    for c in chosen_dir
+                ]
+            ),
+            key=lambda c: str(c.root),
+        ),
+        key=lambda c: str(c.root).casefold(),
+        reverse=reverse,
     )
     if _print:
         pprint(collections)
@@ -401,7 +410,7 @@ def main(
         # 'main' loop if no other command
         for c in collections:
             attach_basic_id3_metadata(
-                base_music_dir=chosen_dir, collection=c, force=force
+                base_music_dir=default_music_dir(), collection=c, force=force
             )
             manage_album_art(
                 c,
