@@ -8,7 +8,7 @@ set -e
 set -o pipefail
 
 recent_albums() {
-	fd --changed-within 1h --min-depth 2 --max-depth 3 -x echo "{//}" | unique
+	fd --changed-within 30m --min-depth 2 --max-depth 3 -x echo "{//}" | unique
 }
 
 main() {
