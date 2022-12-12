@@ -27,6 +27,7 @@ jobs:
       - name: Run mypy
         run: |
           mypy --install-types --non-interactive ./plaintext_playlist_py
+          mypy ./bin/id3stuff ./bin/albums-info ./bin/car-playlist ./bin/linkmusic
       - name: Run flake8
         run: |
           flake8 ./plaintext_playlist_py
