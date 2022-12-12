@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # this uses https://beets.io/ for the majority of tagging/fixing tags
 # and then for recently modified directories:
-# - fetches genres use the 'beet lastgenre' command
 # - uses my personal idstuff command to check some edge cases and album art/embedded art
 
 set -e
@@ -29,9 +28,10 @@ main() {
 	for album in "${recent[@]}"; do
 		id3stuff --remove-embedded-album-art "${album}"
 	done
-	for album in "${recent[@]}"; do
-		beet lastgenre "${album}"
-	done
+
+	# import once all data has been fixed in ~/Music
+	# so that beet remembers its been imported
+	beet import "${XDG_MUSIC_DIR}"
 }
 
 main "$@" || exit $?

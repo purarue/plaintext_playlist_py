@@ -1,27 +1,11 @@
 #!/usr/bin/env python3
 
 """
-Personal opinionated ID3 stuff -- forever a WIP script
+Personal opinionated ID3 stuff
 
 - Make sure every song has track, album, artist and album artist ID3 data
+- Make sure there are no extra spaces on any of the data
 - Prompt for Album Art to be copied/extracted from APIC frames/downloaded to 'cover.jpg' if not present
-
-In the future... ?
-
-- Resolve broken/similar artists names for the same artist (different spellings/translations)
-- Add Track Numbers
-- Perhaps make this Plex Compliant with some other tool?
-- Add Year
-- Add Genre
-
-It could be used to:
-- Remove Comments/Useless Data
-
-but currently I use a separate mpv_clean_priv_frames:
-https://github.com/seanbreckenridge/HPI-personal/blob/master/scripts/mpv_clean_priv_frames
-
-which searches https://github.com/seanbreckenridge/mpv-history-daemon
-data instead of pre-emptively removing possibly useful metadata
 """
 
 import os
