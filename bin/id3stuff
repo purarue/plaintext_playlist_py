@@ -367,6 +367,7 @@ def manage_album_art(
     help="Skip asking to download art for images",
 )
 @click.option(
+    "-R/-K",
     "--remove-embedded-album-art/--keep-embedded-album-art",
     is_flag=True,
     default=True,
