@@ -199,7 +199,7 @@ def main(bypass: bool, cover: str, sync_to: str, delete: bool):
             click.echo(str(e), err=True)
             click.echo("To ignore this, pass --bypass")
             sys.exit(1)
-    playlistlines = list(iterate_playlists(playlistdir()))
+    playlistlines = list(iterate_playlists(playlistdir(), exclude_if_starts_with=[]))
     logger.info(f"Syncing {len(playlistlines)} files...")
     assert len(playlistlines) > 0
     hardlink_sync_dirs(
