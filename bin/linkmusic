@@ -88,6 +88,9 @@ def remove_empty_dirs(path: str, *, cover_image_name: str) -> None:
 
 
 def _hardlink_file(source: Path, target: Path) -> None:
+    if source.is_dir():
+        logger.warning(f"{source} is a directory, skipping...")
+        return
     if not target.exists() or target.stat().st_size != source.stat().st_size:
         target.parent.mkdir(parents=True, exist_ok=True)
         if target.exists():
