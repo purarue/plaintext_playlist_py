@@ -1,7 +1,7 @@
 import os
 import warnings
 import subprocess
-from typing import Iterator, NamedTuple, Union
+from typing import Iterator, NamedTuple, Union, Optional, List
 from functools import lru_cache
 from pathlib import Path
 
@@ -37,14 +37,21 @@ class PlaylistPath(NamedTuple):
         return self.in_musicdir().parent
 
 
-def iterate_playlists(playlist_txt_dir: Path | None = None) -> Iterator[PlaylistPath]:
+def iterate_playlists(
+    playlist_txt_dir: Path | None = None,
+    exclude_if_starts_with: Optional[List[str]] = None,
+) -> Iterator[PlaylistPath]:
     """
     Get individual lines from each playlist.txt file
     """
+    if exclude_if_starts_with is None:
+        exclude_if_starts_with = ["_"]
     if playlist_txt_dir is None:
         playlist_txt_dir = playlistdir()
 
     for playlistfile in playlist_txt_dir.rglob("*.txt"):
+        if any(playlistfile.stem.startswith(exc) for exc in exclude_if_starts_with):
+            continue
         try:
             for line in filter(
                 str.strip, playlistfile.read_text(encoding="utf-8").splitlines()
