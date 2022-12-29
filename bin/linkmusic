@@ -151,9 +151,6 @@ def hardlink_sync_dirs(
             )
             assert sync_to_dir.stem == collection.root.stem
             _hardlink_file(cover_art, sync_to_dir / cover_image_name)
-        else:
-            pass
-            # logger.debug(f"No cover art at '{cover_art}' exists")
 
     if delete:
         for removed in already_in_set:

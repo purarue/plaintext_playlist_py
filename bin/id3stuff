@@ -186,7 +186,7 @@ def _download_img(url: str) -> Path | None:
     return write_to
 
 
-def _fetch_remote_image(c: Collection, /) -> Path | None:
+def _fetch_remote_image(c: Collection, /, open_google: bool = False) -> Path | None:
     """
     returns a path to a downloaded album art in /tmp/id3stuff
     """
@@ -204,11 +204,15 @@ def _fetch_remote_image(c: Collection, /) -> Path | None:
     search_url = BASE_URL.format(
         " ".join(data).replace("&", "").replace(" ", "+") + " album"
     )
-    click.echo(f"Opening {search_url}...")
-    webbrowser.open(search_url)
-    img_url = click.prompt("Enter IMG url to use").strip()
+    if open_google:
+        click.echo(f"Opening {search_url}...")
+        webbrowser.open(search_url)
+    img_url = click.prompt("Enter IMG url/path to use").strip()
     res = None
     while res is None:
+        # if user passed a path, return that instead
+        if os.path.exists(img_url):
+            return Path(img_url)
         res = _download_img(img_url)
         if res is None:
             img_url = click.prompt("Enter IMG url to use").strip()
@@ -273,11 +277,14 @@ def _pick_image(
             pth = Path(picked_selection)
             assert pth.exists(), f"path {pth} doesnt exist"
             return pth
-    if not skip_downloads and click.confirm("Search for URL?", default=True):
-        downloaded = _fetch_remote_image(c)
-        if downloaded is not None:
-            _print_kitty_images([downloaded])
-            return downloaded
+    if skip_downloads:
+        return
+    downloaded = _fetch_remote_image(
+        c, open_google=click.confirm("Search for URL?", default=True)
+    )
+    if downloaded is not None:
+        _print_kitty_images([downloaded])
+        return downloaded
     return None
 
 
