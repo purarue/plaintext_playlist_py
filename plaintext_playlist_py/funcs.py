@@ -3,7 +3,7 @@ To be used with `hpi query`
 
 more info
 
-https://github.com/seanbreckenridge/ttally/blob/master/ttally/funcs.py
+https://github.com/seanbreckenridge/ttally/blob/master/ttally/__main__.py
 https://github.com/karlicoss/HPI#which-month-in-2020-did-i-make-the-most-git-commits-in
 """
 
