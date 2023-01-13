@@ -186,19 +186,19 @@ def _download_img(url: str) -> Path | None:
     return write_to
 
 
-def _fetch_remote_image(c: Collection, /, open_google: bool = False) -> Path | None:
+def _fetch_remote_image(
+    c: Collection, /, open_google: bool = False, tags: Optional[List[str]] = None
+) -> Path | None:
     """
     returns a path to a downloaded album art in /tmp/id3stuff
     """
     BASE_URL = "https://www.google.com/search?q={}&tbm=isch&sclient=img"
     assert len(c.paths) >= 1
     pth: Path = c.paths[0]
+    tags = tags or ["artist", "album"]
     data = _extract_current_id3_data(
         pth,
-        for_tags=(
-            "artist",
-            "album",
-        ),
+        for_tags=tuple(tags),
         add_single_description=False,
     )
     search_url = BASE_URL.format(
@@ -262,7 +262,12 @@ def _extract_apic_album_art(c: Collection, /) -> List[Path]:
 
 
 def _pick_image(
-    c: Collection, imgs: List[Path], /, *, skip_downloads: bool
+    c: Collection,
+    imgs: List[Path],
+    /,
+    *,
+    skip_downloads: bool,
+    tags: Optional[List[str]] = None,
 ) -> Path | None:
     _print_kitty_images(imgs)
     if len(imgs) == 1:
@@ -280,7 +285,9 @@ def _pick_image(
     if skip_downloads:
         return
     downloaded = _fetch_remote_image(
-        c, open_google=click.confirm("Search for URL?", default=True)
+        c,
+        open_google=click.confirm("Search for URL?", default=True),
+        tags=tags,
     )
     if downloaded is not None:
         _print_kitty_images([downloaded])
@@ -301,7 +308,7 @@ def _convert_image(chosen: Path | None, target: Path, /) -> None:
     if chosen_ext == ".jpeg":
         chosen_ext = ".jpg"
     if chosen_ext == target.suffix:
-        if "id3stuff-temp" in str(chosen):
+        if "id3stuff-temp" in str(chosen) or str(chosen).startswith("/tmp/"):
             # prevent cross-device (/tmp) links
             eprint(f"Copying '{chosen}' to '{target}'")
             shutil.copyfile(chosen, target)
@@ -336,12 +343,15 @@ def manage_album_art(
     remove_embedded_album_art: bool,
     to_filename: str = DEFAULT_LINK_TARGET,
     skip_downloads: bool = True,
+    tags: Optional[List[str]] = None,
 ) -> None:
     images = list(iter_collection_images(collection))
     images += _extract_apic_album_art(collection)
     target = collection.root / to_filename
     if not target.exists():
-        chosen = _pick_image(collection, images, skip_downloads=skip_downloads)
+        chosen = _pick_image(
+            collection, images, skip_downloads=skip_downloads, tags=tags
+        )
         _convert_image(chosen, target)
     if target.exists() and remove_embedded_album_art:
         _remove_apic_frames(collection)
@@ -380,6 +390,9 @@ def manage_album_art(
     default=True,
     help="Remove embedded album art in APIC frames from MP3 files, if they're present",
 )
+@click.option(
+    "-T", "--tags", multiple=True, help="id3 tags to use for search when using google"
+)
 @click.option("--reverse", is_flag=True, default=False)
 @click.argument("PATH", type=click.Path(exists=True), required=False, nargs=-1)
 def main(
@@ -389,6 +402,7 @@ def main(
     link_cover_to: str,
     remove_embedded_album_art: bool,
     skip_downloads: bool,
+    tags: Sequence[str],
     reverse: bool,
 ) -> None:
     if not id3stuff_tmp.exists():
@@ -425,6 +439,7 @@ def main(
                 to_filename=link_cover_to,
                 skip_downloads=skip_downloads,
                 remove_embedded_album_art=remove_embedded_album_art,
+                tags=list(tags) if tags else None,
             )
 
 
