@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+
+import click
+from plaintext_playlist_py import Collection, musicdir, iterate_playlists
+
+
+@click.command()
+def main() -> None:
+    collections = [c.root for c in Collection.iter_ext_collection(musicdir())]
+    in_playlists = [p.in_musicdir().parent for p in iterate_playlists()]
+    for path in set(collections) - set(in_playlists):
+        click.echo(path)
+
+
+if __name__ == "__main__":
+    main()
