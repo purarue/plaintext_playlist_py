@@ -1,7 +1,7 @@
 from typing import List
 
 import click
-from my.core.__main__ import _ui_getchar_pick  # from https://github.com/karlicoss/HPIK
+from my.core.__main__ import _ui_getchar_pick  # from https://github.com/karlicoss/HPI
 
 OTHER = "Other"
 
