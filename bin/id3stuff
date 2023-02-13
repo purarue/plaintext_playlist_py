@@ -97,7 +97,6 @@ def attach_basic_id3_metadata(
         choices.append(prt)
     click.secho(f"{collection.root} ({len(collection.paths)} songs)", fg="blue")
     for tag, force_individual_prompt in BASIC_TAGS.items():
-
         # if there are extra spaces on ID3 data, remove them
         for f in collection.paths:
             id3f = safe_id3(f)
