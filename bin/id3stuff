@@ -219,17 +219,17 @@ def _fetch_remote_image(
             return res
 
 
-KITTY_PATH = shutil.which("kitty")
+KITTEN_PATH = shutil.which("kitten")
 
 
 def _print_kitty_images(imgs: List[Path]) -> bool:
     if os.environ.get("TERM") != "xterm-kitty":
         return False
     printed = False
-    assert KITTY_PATH is not None, "could not find kitty on your path"
+    assert KITTEN_PATH is not None, "could not find kitten (kitty util command) on your path"
     for img in imgs:
         print(f"\n{img}\n")
-        subprocess.run([KITTY_PATH, "icat", str(img)])
+        subprocess.run([KITTEN_PATH, "icat", str(img)])
         printed = True
     return printed
 
