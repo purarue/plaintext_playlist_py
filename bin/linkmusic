@@ -105,7 +105,7 @@ def _hardlink_file(source: Path, target: Path) -> None:
 
 
 def hardlink_sync_dirs(
-    files: list[PlaylistPath], *, cover_image_name: str, to_dir: Path, delete: bool
+    files: set[PlaylistPath], *, cover_image_name: str, to_dir: Path, delete: bool
 ) -> None:
     """
     Essentially a manual rsync --delete-after with hardlinks
@@ -196,7 +196,7 @@ def main(bypass: bool, cover: str, sync_to: str, delete: bool):
             click.echo(str(e), err=True)
             click.echo("To ignore this, pass --bypass")
             sys.exit(1)
-    playlistlines = list(iterate_playlists(playlistdir(), exclude_if_starts_with=[]))
+    playlistlines = set(iterate_playlists(playlistdir(), exclude_if_starts_with=[]))
     logger.info(f"Syncing {len(playlistlines)} files...")
     assert len(playlistlines) > 0
     hardlink_sync_dirs(
