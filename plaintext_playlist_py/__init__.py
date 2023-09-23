@@ -15,7 +15,7 @@ def playlistdir() -> Path:
         ["plainplay", "playlistdir"], check=True, encoding="utf-8", capture_output=True
     )
     p = Path(proc.stdout.strip())
-    assert p.exists(), "'plainplay playlistdir' returned path that doesnt exist"
+    assert p.exists(), "'plainplay playlistdir' returned path that doesn't exist"
     return p
 
 

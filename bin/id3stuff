@@ -279,7 +279,7 @@ def _pick_image(
         picked_selection = getchar_choices[picked_index]
         if picked_selection != OTHER:
             pth = Path(picked_selection)
-            assert pth.exists(), f"path {pth} doesnt exist"
+            assert pth.exists(), f"path {pth} doesn't exist"
             return pth
     if skip_downloads:
         return
@@ -298,7 +298,7 @@ def _convert_image(chosen: Path | None, target: Path, /) -> None:
     if chosen is None:
         return
     chosen_ext = chosen.suffix.lower()
-    # if filename doesnt have an extension, load the image and infer
+    # if filename doesn't have an extension, load the image and infer
     if chosen_ext == "":
         with chosen.open("rb") as img_f:
             img = Image.open(img_f)

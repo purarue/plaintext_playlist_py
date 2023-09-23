@@ -121,7 +121,7 @@ def hardlink_sync_dirs(
 
     seen_source_collection_roots: Dict[Path, PlaylistPath] = {}
 
-    # copy link if it doesnt already exist on target
+    # copy link if it doesn't already exist on target
     for p in files:
         target = p.in_dir(to_dir)
         source = p.in_musicdir()
@@ -129,7 +129,7 @@ def hardlink_sync_dirs(
             seen_source_collection_roots[p.collection_root()] = p
         _hardlink_file(source, target)
         # remove from set, so at the end we can check
-        # the set. If theres anything left in it,
+        # the set. If there's anything left in it,
         # that wasn't included in the 'files' list,
         # i.e. its been deleted from a playlist
         ps = p.path.strip(os.linesep)
