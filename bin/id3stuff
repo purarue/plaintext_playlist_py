@@ -226,7 +226,9 @@ def _print_kitty_images(imgs: List[Path]) -> bool:
     if os.environ.get("TERM") != "xterm-kitty":
         return False
     printed = False
-    assert KITTEN_PATH is not None, "could not find kitten (kitty util command) on your path"
+    assert (
+        KITTEN_PATH is not None
+    ), "could not find kitten (kitty util command) on your path"
     for img in imgs:
         print(f"\n{img}\n")
         subprocess.run([KITTEN_PATH, "icat", str(img)])

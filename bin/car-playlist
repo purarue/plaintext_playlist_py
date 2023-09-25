@@ -16,9 +16,7 @@ from plaintext_playlist_py import playlistdir, PlaylistPath, iterate_playlists
 
 Lines = set[str]
 
-already_prompted_cache = (
-    Path(os.environ["HPIDATA"]) / "car_playlist_prompted.json"
-)
+already_prompted_cache = Path(os.environ["HPIDATA"]) / "car_playlist_prompted.json"
 
 
 class JSONCache:
