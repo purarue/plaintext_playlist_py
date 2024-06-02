@@ -7,7 +7,6 @@ import atexit
 import shlex
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 import click
 from my.core.__main__ import _ui_getchar_pick
@@ -42,31 +41,49 @@ class JSONCache:
         self.datafile.write_text(encoded)
 
 
-def add_line(path: PlaylistPath, to_playlist: str = "car") -> None:
+def add_to_car_playlist(path: PlaylistPath, to_playlist: str = "car") -> None:
     with open(playlistdir() / f"{to_playlist}.txt", "a") as f:
         f.write(f"{path.path}\n")
 
 
+mpv_absolute: str | None = None
+
+
 def mpv(mp3: str) -> None:
-    # todo: lookup in $PATH?
-    cmd = shlex.split(f'/usr/bin/mpv "{mp3}" --no-audio-display')
-    proc = subprocess.Popen(cmd)
+    global mpv_absolute
+
+    if not mpv_absolute:
+        mpv_possible_paths = [
+            os.environ.get("MPV_PATH"),
+            "/usr/bin/mpv",
+            "/bin/mpv",
+            "/usr/local/bin/mpv",
+        ]
+        for path in mpv_possible_paths:
+            if path and os.path.exists(path):
+                mpv_absolute = path
+                break
+        else:
+            raise ValueError(f"mpv not found in {mpv_possible_paths=}")
+
+    proc = subprocess.Popen(shlex.split(f'{mpv_absolute} "{mp3}" --no-audio-display'))
     proc.wait()
+
+
+choices = ["add", "skip", "mpv"]
 
 
 def prompt(
     path: PlaylistPath,
     cache: JSONCache,
     *,
+    msg: str,
     to_playlist: str = "car",
     autoplay: bool = False,
-    msg: Optional[str] = None,
 ) -> None:
     f = str(path.in_musicdir().absolute())
     if autoplay:
         mpv(f)
-
-    choices = ["add", "skip", "mpv"]
 
     promptstr = str(path.path)
     if msg:
@@ -78,7 +95,7 @@ def prompt(
         prompt(path, cache, to_playlist=to_playlist, msg=msg)  # recurse
     else:
         if chosen == "add":
-            add_line(path, to_playlist)
+            add_to_car_playlist(path, to_playlist)
         cache.add_line(path)
 
 
@@ -89,11 +106,11 @@ def prompt(
 def main(autoplay: bool) -> None:
     cache = JSONCache()
     atexit.register(lambda: cache._write())
-    paths = [pp for pp in iterate_playlists() if pp not in cache]
+    paths = list(filter(lambda pp: pp not in cache, iterate_playlists()))
     while len(paths) > 0:
         newest = paths.pop(0)
         prompt(newest, cache, autoplay=autoplay, msg=f" ({len(paths) + 1} left)")
-    click.secho(f"car-playlist: {click.style('done','green')}")
+    click.secho(f"car-playlist: {click.style('done', 'green')}")
 
 
 if __name__ == "__main__":
