@@ -1,6 +1,6 @@
 # plaintext_playlist_py
 
-Library to parse [plaintext-playlist](https://github.com/seanbreckenridge/plaintext-playlist) files
+Library to parse [plaintext-playlist](https://github.com/purarue/plaintext-playlist) files
 
 This is mostly for personal usage, making this installable as a library means I can use it across code/projects/scripts
 
@@ -17,7 +17,7 @@ Runs on `python3.10+`
 
 To install with pip, run:
 
-    pip install git+https://github.com/seanbreckenridge/plaintext-playlist
+    pip install git+https://github.com/purarue/plaintext-playlist
 
 ## Usage
 
@@ -28,7 +28,7 @@ Can run `plaintext_playlist_py list-all` to list all items in playlists
 ### Tests
 
 ```bash
-git clone 'https://github.com/seanbreckenridge/plaintext_playlist_py'
+git clone 'https://github.com/purarue/plaintext_playlist_py'
 cd ./plaintext_playlist_py
 pip install '.[testing]'
 flake8 ./plaintext_playlist_py
