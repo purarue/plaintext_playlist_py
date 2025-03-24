@@ -32,7 +32,7 @@ main() {
 
 	# import once all data has been fixed in ~/Music
 	# so that beet remembers its been imported
-	main-machine && beet import "${XDG_MUSIC_DIR}"
+	beet import "${XDG_MUSIC_DIR}"
 }
 
 main "$@" || exit $?
