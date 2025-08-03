@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+if [[ -r playlist.zip ]]; then
+	echo "playlist.zip already exists, exiting..."
+	exit 1
+fi
+tmpdir="$(mktemp -d)"
+trap 'trash-put -v "$tmpdir"' EXIT
+i=1
+pushd "$XDG_MUSIC_DIR" || exit 1
+while read -r line; do
+	# rename from relative path to dd-$(basename)
+	i_left_padded=$(printf "%02d" "$i")
+	new_filename="${i_left_padded}-$(basename "$line")"
+	cp -v "$line" "$tmpdir/$new_filename"
+	((i++))
+done < <(plainplay list "$1")
+if ((i == 1)); then
+	echo "No tracks found in playlist '$1'."
+	exit 1
+fi
+popd || exit 1
+exec zip -rj 'playlist.zip' "$tmpdir"
