@@ -1,11 +1,10 @@
-from typing import Dict
 from pathlib import Path
 
 from mutagen.id3 import ID3, ID3NoHeaderError  # type: ignore[import]
 from mutagen.easyid3 import EasyID3  # type: ignore[import]
 
 # whether to prompt individually each time
-BASIC_TAGS: Dict[str, bool] = {
+BASIC_TAGS: dict[str, bool] = {
     "title": True,
     "artist": False,
     "album": False,

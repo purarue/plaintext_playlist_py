@@ -1,4 +1,3 @@
-from typing import List
 
 import click
 from my.core.__main__ import _ui_getchar_pick  # from https://github.com/karlicoss/HPI
@@ -6,7 +5,7 @@ from my.core.__main__ import _ui_getchar_pick  # from https://github.com/karlico
 OTHER = "Other"
 
 
-def pick_and_or_edit(choices: List[str], prompt: str = "Select from:") -> str:
+def pick_and_or_edit(choices: list[str], prompt: str = "Select from:") -> str:
     """
     Pick from the choices (parts of the Path) to start off with
     then possibly edit the text in your editor to get it to exactly what you want

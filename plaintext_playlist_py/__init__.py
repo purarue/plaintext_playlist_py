@@ -1,7 +1,8 @@
 import os
 import warnings
 import subprocess
-from typing import Iterator, NamedTuple, Union, Optional, List
+from typing import NamedTuple, Union
+from collections.abc import Iterator
 from functools import lru_cache
 from pathlib import Path
 
@@ -39,7 +40,7 @@ class PlaylistPath(NamedTuple):
 
 def iterate_playlists(
     playlist_txt_dir: Path | None = None,
-    exclude_if_starts_with: Optional[List[str]] = None,
+    exclude_if_starts_with: list[str] | None = None,
 ) -> Iterator[PlaylistPath]:
     """
     Get individual lines from each playlist.txt file
