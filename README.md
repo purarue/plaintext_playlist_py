@@ -17,7 +17,7 @@ Runs on `python3.10+`
 
 To install with pip, run:
 
-    pip install git+https://github.com/purarue/plaintext-playlist
+    pip install plaintext_playlist_py
 
 ## Usage
 
