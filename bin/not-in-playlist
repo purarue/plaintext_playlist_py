@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+# /// script
+# requires-python = ">=3.14"
+# dependencies = [
+#     "click>=8.3.1",
+#     "plaintext-playlist-py>=0.1.0",
+# ]
+# ///
 
 import click
 from plaintext_playlist_py import Collection, musicdir, iterate_playlists

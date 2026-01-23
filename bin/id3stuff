@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.14"
+# dependencies = [
+#     "click>=8.3.1",
+#     "hpi>=0.7.20250911",
+#     "more-itertools>=10.8.0",
+#     "mutagen>=1.47.0",
+#     "pillow>=12.1.0",
+#     "plaintext-playlist-py>=0.1.0",
+#     "requests>=2.32.5",
+# ]
+# ///
 
 """
 Personal opinionated ID3 stuff

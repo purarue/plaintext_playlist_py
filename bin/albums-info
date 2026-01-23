@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.14"
+# dependencies = [
+#     "click>=8.3.1",
+#     "ipython>=9.9.0",
+#     "mutagen>=1.47.0",
+#     "plaintext-playlist-py>=0.1.0",
+# ]
+# ///
 
 import json
 from typing import Dict, cast, List, Union
